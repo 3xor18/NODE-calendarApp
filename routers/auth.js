@@ -6,6 +6,12 @@ const {
 	loginUsuario,
 	revalidarToken,
 } = require('../controllers/authController');
+const {
+	validarCampos,
+} = require('../middlewares/validar-campos');
+const {
+	validarJWT,
+} = require('../middlewares/validar-jwt');
 
 router.post(
 	'/new',
@@ -18,6 +24,7 @@ router.post(
 			'password',
 			'Password debe de ser >6'
 		).isLength({ min: 6 }),
+		validarCampos,
 	],
 	crearUsuario
 );
@@ -30,10 +37,11 @@ router.post(
 			'password',
 			'Password debe de ser >6'
 		).isLength({ min: 6 }),
+		validarCampos,
 	],
 	loginUsuario
 );
 
-router.get('/renew', revalidarToken);
+router.get('/renew', validarJWT, revalidarToken);
 
 module.exports = router;

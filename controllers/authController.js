@@ -1,62 +1,119 @@
 const { response, request } = require('express');
+const bcryptjs = require('bcryptjs');
+const Usuario = require('../models/UsuarioModel');
 const {
-	validationResult,
-} = require('express-validator');
+	UserException,
+} = require('../Exceptions/UserException');
+const { generarJWT } = require('../helpers/JWT');
 
-const crearUsuario = (
+const crearUsuario = async (
 	req = request,
 	res = response
 ) => {
-	const { email, name, password } = req.body;
-
-	//errores
-	const errors = validationResult(req);
-
-	if (!errors.isEmpty()) {
-		return res.status(400).send({
+	let newUser;
+	try {
+		const userExist = await findUserByEmail(
+			req.body
+		);
+		if (userExist) {
+			return res.status(500).send({
+				ok: false,
+				error: 'Este usuario ya existe en bd',
+			});
+		}
+		const usuario = new Usuario(req.body);
+		const userForBd = encriptarPass(usuario);
+		newUser = await userForBd.save();
+		//JWT token
+		const token = await generarJWT(
+			newUser.id,
+			usuario.name
+		);
+		res
+			.status(200)
+			.send({ ok: true, user: newUser, token });
+	} catch (error) {
+		return res.status(500).send({
 			ok: false,
-			errors: errors.mapped(),
+			error: 'Error al crear el usuario',
 		});
 	}
-
-	res.status(201).send({
-		ok: true,
-		msg: 'Register',
-		name,
-		email,
-		password,
-	});
 };
 
-const loginUsuario = (
+const loginUsuario = async (
 	req = request,
 	res = response
 ) => {
-	const { email, password } = req.body;
-
-	//errores
-	const errors = validationResult(req);
-
-	if (!errors.isEmpty()) {
-		return res.status(400).send({
+	try {
+		const userExist = await findUserByEmail(
+			req.body
+		);
+		if (!userExist) {
+			return res.status(500).send({
+				ok: false,
+				error: 'Este usuario no existe',
+			});
+		}
+		const passwordIsValid = validarPassword(
+			req.body.password,
+			userExist.password
+		);
+		if (!passwordIsValid) {
+			return res.status(500).send({
+				ok: false,
+				error: 'usuario o contraseña errada',
+			});
+		}
+		const token = await generarJWT(
+			userExist.id,
+			userExist.name
+		);
+		return res.send({
+			ok: true,
+			msg: 'TODO OK',
+			token,
+		});
+	} catch (error) {
+		return res.status(500).send({
 			ok: false,
-			errors: errors.mapped(),
+			error: 'Error en login',
 		});
 	}
-
-	res.send({
-		ok: true,
-		msg: 'Login',
-		email,
-		password,
-	});
 };
 
-const revalidarToken = (
+const revalidarToken = async (
 	req = request,
 	res = response
 ) => {
-	res.send({ ok: true, msg: 'Login' });
+	const uid = req.uid;
+	const name = req.name;
+	//JWT
+	const token = await generarJWT(uid, name);
+	res.send({ ok: true, uid, name, token });
+};
+
+const validarPassword = (
+	passwordIn,
+	paswordBD
+) => {
+	return bcryptjs.compareSync(
+		passwordIn,
+		paswordBD
+	);
+};
+
+const findUserByEmail = async ({ email }) => {
+	let user = await Usuario.findOne({ email });
+	return user;
+};
+
+const encriptarPass = (usuario) => {
+	const salt = bcryptjs.genSaltSync();
+	usuario.password = bcryptjs.hashSync(
+		usuario.password,
+		salt
+	);
+	return usuario;
 };
 
 module.exports = {
