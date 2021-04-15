@@ -1,7 +1,16 @@
 {
     "cSpell.words": [
+        "Contollers",
+        "Evento",
+        "Eventos",
+        "Obtener",
         "Usuario",
+        "actualizar",
         "crear",
-        "revalidar"
+        "eliminar",
+        "fecha",
+        "middlewares",
+        "revalidar",
+        "validar"
     ]
 }

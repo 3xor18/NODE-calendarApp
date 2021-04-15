@@ -19,6 +19,10 @@ app.use(express.json());
 
 //hablilar Rutas
 app.use('/api/auth', require('./routers/auth'));
+app.use(
+	'/api/events',
+	require('./routers/eventsRouter')
+);
 
 //Server
 const PORT = process.env.PORT;
