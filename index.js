@@ -1,6 +1,8 @@
 const express = require('express');
 require('dotenv').config();
-const { dbConnection } = require('./DB/config');
+const {
+	dbConnection,
+} = require('./src/DB/config');
 const cors = require('cors');
 
 //server express
@@ -18,10 +20,13 @@ app.use(cors());
 app.use(express.json());
 
 //hablilar Rutas
-app.use('/api/auth', require('./routers/auth'));
+app.use(
+	'/api/auth',
+	require('./src/routers/auth')
+);
 app.use(
 	'/api/events',
-	require('./routers/eventsRouter')
+	require('./src/routers/eventsRouter')
 );
 
 //Server
