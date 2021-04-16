@@ -70,7 +70,10 @@ const loginUsuario = async (
 		);
 		return res.send({
 			ok: true,
-			msg: 'TODO OK',
+			user: {
+				uid: userExist.id,
+				name: userExist.name,
+			},
 			token,
 		});
 	} catch (error) {
